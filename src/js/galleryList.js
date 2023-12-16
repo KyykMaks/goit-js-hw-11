@@ -26,10 +26,10 @@ async function onSubmit(event) {
   querry = event.target.elements.searchQuery.value;
   try {
     const {
-      data: { total, hits },
+      data: { total, hits, totalHits},
     } = await getPhoto(querry, page);
     gallery.innerHTML = '';
-    if (hits.length === 0) {
+    if (totalHits.length === 0) {
       return Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
@@ -37,15 +37,15 @@ async function onSubmit(event) {
     gallery.innerHTML = createMarkup(hits);
 
     Notiflix.Notify.success(`Hooray! We found ${total} images`);
-    if (total > 40) {
+    if (totalHits > 40) {
       loadMore.classList.remove('is-hidden');
     }
-    lightbox.refresh();
+    
   } catch (error) {
     console.log(error.message);
   } finally {
     event.target.reset();
-    
+    lightbox.refresh();
   }
 }
 
@@ -58,10 +58,10 @@ async function handleClick() {
     } = await getPhoto(querry, page);
 
     gallery.insertAdjacentHTML('beforeend', createMarkup(hits));
-    const maxPage = totalHits;
-    maxPage = Math.ceil(totalHits / 40);
+    const maxPage = Math.ceil(totalHits / 40);
+    
 
-    if (maxPage === page) {
+    if (maxPage >= page) {
       loadMore.classList.add('is-hidden');
       return Notiflix.Notify.info(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -70,5 +70,7 @@ async function handleClick() {
     lightbox.refresh();
   } catch (error) {
     console.log(error.message);
-  } 
+  } finally {
+    lightbox.refresh();
+  }
 }

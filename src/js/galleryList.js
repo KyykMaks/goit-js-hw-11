@@ -13,6 +13,7 @@ const lightbox = new SimpleLightbox('.gallery a', {
   captionsDelay: 250,
   captionsPosition: 'bottom',
 });
+
 let page = 1;
 let querry = null;
 
@@ -24,23 +25,28 @@ async function onSubmit(event) {
   loadMore.classList.add('is-hidden');
   page = 1;
   querry = event.target.elements.searchQuery.value;
+
   try {
+    if (!querry.trim()) {
+      return Notiflix.Notify.failure('Input is not value');
+    }
+
     const {
-      data: { total, hits, totalHits},
+      data: { total, hits, totalHits },
     } = await getPhoto(querry, page);
+
+    // console.log(total, hits, totalHits);
     gallery.innerHTML = '';
-    if (totalHits.length === 0) {
+    if (hits.length === 0) {
       return Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
     }
     gallery.innerHTML = createMarkup(hits);
-
-    Notiflix.Notify.success(`Hooray! We found ${total} images`);
+    Notiflix.Notify.success(`Hooray! We found ${totalHits} images`);
     if (totalHits > 40) {
       loadMore.classList.remove('is-hidden');
     }
-    
   } catch (error) {
     console.log(error.message);
   } finally {
@@ -56,15 +62,15 @@ async function handleClick() {
     const {
       data: { total, hits, totalHits },
     } = await getPhoto(querry, page);
-
     gallery.insertAdjacentHTML('beforeend', createMarkup(hits));
-    const maxPage = Math.ceil(totalHits / 40);
-    
 
-    if (maxPage >= page) {
+    const maxPage = Math.ceil(totalHits / 40);
+
+    // console.log(maxPage,page);
+    if (maxPage <= page) {
       loadMore.classList.add('is-hidden');
       return Notiflix.Notify.info(
-        'Sorry, there are no images matching your search query. Please try again.'
+        "We're sorry, but you've reached the end of search results."
       );
     }
     lightbox.refresh();
